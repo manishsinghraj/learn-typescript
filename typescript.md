@@ -266,6 +266,9 @@ console.log(mixed);  // Output: ['MAN', true, 24]
 - **Union Types**: Let variables store multiple types, making your code more flexible.
 - Always use parentheses to group multiple types when declaring union types, especially for arrays.
 
+//TODO 
+Discriminated Union Types
+
 ---
 
 ## 4. Object Types
@@ -656,7 +659,7 @@ form.addEventListener('submit', (e: Event) => {
 3. Use **type assertions** to narrow types and access specific properties.
 4. When working with forms, consider input types and use `.valueAsNumber` for numeric values.
 
-```markdown
+
 # Public, Private, and Readonly in TypeScript
 
 In TypeScript, access modifiers like `public`, `private`, and `readonly` are used to control how properties and methods of a class can be accessed and modified. Let's explore these concepts using the `Invoice` class as an example.
@@ -738,6 +741,177 @@ const invoice = new Invoice("Anna", "consulting", 150);
 console.log(invoice.client); // Accessible
 invoice.client = "Updated Client"; // Modifiable
 ```
+
+In TypeScript, the `static` keyword is used to define members (properties or methods) that belong to the class itself, rather than to instances of the class. Static members are shared among all instances of the class and can be accessed directly on the class without creating an instance.
+
+---
+
+### **Key Features of Static Members**
+1. **Class-Level Scope**:
+   - Static members are tied to the class and not the instances of the class.
+
+2. **Access**:
+   - Access static members using the class name.
+   - Static members cannot be accessed from instance objects.
+
+3. **Memory Efficiency**:
+   - Static members are allocated once in memory for the class, making them efficient for shared values or utilities.
+
+---
+
+### **Example of Static Properties and Methods**
+```typescript
+class Utility {
+    static PI: number = 3.14159; // Static property
+
+    static calculateArea(radius: number): number { // Static method
+        return this.PI * radius * radius;
+    }
+}
+
+// Accessing static members without creating an instance
+console.log(Utility.PI); // 3.14159
+console.log(Utility.calculateArea(5)); // 78.53975
+```
+
+---
+
+### **Tricks and Best Practices**
+
+#### 1. **Singleton Pattern with Static**
+The `static` keyword is useful for implementing singletons (ensuring only one instance of a class exists).
+```typescript
+class Singleton {
+    private static instance: Singleton;
+
+    private constructor() {} // Prevent direct instantiation
+
+    static getInstance(): Singleton {
+        if (!this.instance) {
+            this.instance = new Singleton();
+        }
+        return this.instance;
+    }
+
+    greet() {
+        console.log("Hello from Singleton!");
+    }
+}
+
+// Accessing the singleton instance
+const single1 = Singleton.getInstance();
+const single2 = Singleton.getInstance();
+console.log(single1 === single2); // true
+```
+
+---
+
+#### 2. **Utility or Helper Methods**
+Static methods are great for utility functions that don’t rely on instance-specific data.
+```typescript
+class MathUtils {
+    static square(num: number): number {
+        return num * num;
+    }
+
+    static cube(num: number): number {
+        return num * num * num;
+    }
+}
+
+console.log(MathUtils.square(4)); // 16
+console.log(MathUtils.cube(2));   // 8
+```
+
+---
+
+#### 3. **Static Initializers**
+Use static blocks (available in newer versions of TypeScript) for advanced initialization logic.
+```typescript
+class Config {
+    static settings: { theme: string; language: string };
+
+    static {
+        this.settings = {
+            theme: "dark",
+            language: "en",
+        };
+        console.log("Static block executed");
+    }
+}
+
+console.log(Config.settings); // { theme: "dark", language: "en" }
+```
+
+---
+
+#### 4. **Shared Counters or State**
+Static properties can store shared state among all instances of a class.
+```typescript
+class Counter {
+    private static count: number = 0;
+
+    static increment() {
+        this.count++;
+    }
+
+    static getCount() {
+        return this.count;
+    }
+}
+
+Counter.increment();
+Counter.increment();
+console.log(Counter.getCount()); // 2
+```
+
+---
+
+#### 5. **Inheritance with Static**
+Static members are inherited but can also be overridden.
+```typescript
+class Parent {
+    static message = "Hello from Parent!";
+}
+
+class Child extends Parent {
+    static message = "Hello from Child!";
+}
+
+console.log(Parent.message); // Hello from Parent!
+console.log(Child.message);  // Hello from Child!
+```
+
+---
+
+### **Key Limitations**
+1. **No Access to Instance Members**:
+   - Static methods or properties cannot access `this` referring to an instance.
+   - Instead, `this` in static methods refers to the class itself.
+   ```typescript
+   class Demo {
+       static greet() {
+           console.log(this); // Refers to the class
+       }
+   }
+   Demo.greet();
+   ```
+
+2. **Not Polymorphic**:
+   - Static methods are bound to the class and don’t exhibit polymorphic behavior (method overriding in inheritance applies to instance methods).
+
+---
+
+### **When to Use Static Members**
+- Shared constants (e.g., `Math.PI`).
+- Utility functions (e.g., `Math.sqrt`).
+- Singleton design pattern.
+- Shared state or counters.
+- Configuration or metadata for a class.
+
+Using `static` effectively allows you to write clean, reusable, and memory-efficient code.
+
+
 
 ---
 
@@ -837,8 +1011,324 @@ const invoice = new Invoice("Anna", "consulting", 150);
 | **Readonly**| Accessible from anywhere (if public)              | Cannot be changed after initialization |
 
 Using `public`, `private`, and `readonly` effectively can help enforce encapsulation and prevent unintended modifications to your class properties.
+
+
+In TypeScript, the `private` and `protected` access modifiers control the visibility and accessibility of class members (properties and methods). While they both restrict access, there are key differences between them.
+
+---
+
+### **Private**
+1. **Definition**:
+   - The `private` modifier ensures that the class member is accessible only within the **declaring class**.
+   - It cannot be accessed outside the class, not even by derived classes.
+
+2. **Key Points**:
+   - Strictest level of access control.
+   - Not accessible in child classes or instances of the class.
+
+3. **Example**:
+   ```typescript
+   class Parent {
+       private secret: string = "This is private";
+
+       showSecret() {
+           console.log(this.secret);
+       }
+   }
+
+   const obj = new Parent();
+   obj.showSecret(); // Works fine
+   console.log(obj.secret); // Error: Property 'secret' is private and only accessible within class 'Parent'.
+   ```
+
+4. **Use Case**:
+   - For implementation details that should be completely hidden from other parts of the application.
+
+---
+
+### **Protected**
+1. **Definition**:
+   - The `protected` modifier allows access to class members within the **declaring class** and its **subclasses**.
+   - It is not accessible outside these classes, even via instances.
+
+2. **Key Points**:
+   - Accessible in derived (child) classes.
+   - Still not accessible from outside the class hierarchy.
+
+3. **Example**:
+   ```typescript
+   class Parent {
+       protected secret: string = "This is protected";
+
+       showSecret() {
+           console.log(this.secret);
+       }
+   }
+
+   class Child extends Parent {
+       revealSecret() {
+           console.log(this.secret); // Accessible in the derived class
+       }
+   }
+
+   const obj = new Child();
+   obj.revealSecret(); // Works fine
+   console.log(obj.secret); // Error: Property 'secret' is protected and only accessible within class 'Parent' and its subclasses.
+   ```
+
+4. **Use Case**:
+   - For properties or methods intended to be shared with subclasses but hidden from external access.
+
+---
+
+### **Comparison Table**
+| **Aspect**         | **Private**                                | **Protected**                              |
+|---------------------|--------------------------------------------|--------------------------------------------|
+| **Access Scope**    | Only within the declaring class            | Within the declaring class and its subclasses |
+| **Access by Instance** | Not accessible                           | Not accessible                             |
+| **Inheritance**     | Not accessible in child classes            | Accessible in child classes                |
+| **Example Use Case**| Internal implementation details            | Sharing data/methods with derived classes  |
+
+---
+
+### **When to Use**
+- **`private`**: Use when you want to hide class internals entirely (e.g., helper methods, private state).
+- **`protected`**: Use when you need to allow subclasses to interact with certain members without exposing them publicly.
+
+---
+
+### **Public Modifier**
+For context, the `public` modifier (or no modifier) makes members accessible everywhere, including outside the class and its instances.
+
+---
+
+### **Getters and Setters in TypeScript**
+
+TypeScript supports **getters** and **setters** for managing access to object properties. These allow you to encapsulate logic when retrieving or modifying properties, making your code more maintainable and secure.
+
+---
+
+### **1. What Are Getters and Setters?**
+- **Getter**: A method that retrieves or computes the value of a property.
+- **Setter**: A method that validates or modifies a property's value before setting it.
+
+Getters and setters are defined using the `get` and `set` keywords in TypeScript classes.
+
+---
+
+### **2. Defining Getters and Setters**
+Here’s a basic example of a class with getter and setter methods:
+
+```typescript
+class User {
+  private _name: string;
+
+  constructor(name: string) {
+    this._name = name;
+  }
+
+  // Getter
+  get name(): string {
+    return this._name;
+  }
+
+  // Setter
+  set name(newName: string) {
+    if (newName.length < 3) {
+      throw new Error("Name must be at least 3 characters long.");
+    }
+    this._name = newName;
+  }
+}
+
+const user = new User("Alice");
+
+console.log(user.name); // Access via getter -> "Alice"
+
+user.name = "Bob"; // Update via setter
+console.log(user.name); // "Bob"
+
+// Invalid value
+try {
+  user.name = "Ed"; // Error: Name must be at least 3 characters long.
+} catch (error) {
+  console.error(error.message);
+}
 ```
 
+---
+
+### **3. Key Characteristics**
+1. **Encapsulation**: Getters and setters allow you to encapsulate logic, such as validation or formatting, while keeping the API consistent.
+2. **Access Control**: You can restrict access to private properties by exposing only getters or setters.
+3. **Read-Only Properties**: Define only a getter to make a property read-only.
+
+---
+
+### **4. Advanced Usage**
+#### **a. Read-Only Properties**
+You can define a read-only property by implementing only the getter.
+
+```typescript
+class Circle {
+  private _radius: number;
+
+  constructor(radius: number) {
+    this._radius = radius;
+  }
+
+  // Read-only property
+  get area(): number {
+    return Math.PI * this._radius * this._radius;
+  }
+}
+
+const circle = new Circle(5);
+console.log(circle.area); // 78.53981633974483
+
+// circle.area = 100; // Error: Cannot assign to 'area' because it only has a getter.
+```
+
+#### **b. Computed Properties**
+Use getters to compute a property value dynamically.
+
+```typescript
+class Rectangle {
+  constructor(private _width: number, private _height: number) {}
+
+  get area(): number {
+    return this._width * this._height;
+  }
+
+  set dimensions({ width, height }: { width: number; height: number }) {
+    this._width = width;
+    this._height = height;
+  }
+}
+
+const rect = new Rectangle(10, 5);
+console.log(rect.area); // 50
+
+rect.dimensions = { width: 20, height: 10 };
+console.log(rect.area); // 200
+```
+
+#### **c. Lazy Initialization**
+Use getters to perform lazy initialization, delaying computations until the value is accessed.
+
+```typescript
+class ExpensiveCalculation {
+  private _result?: number;
+
+  get result(): number {
+    if (this._result === undefined) {
+      console.log("Performing expensive calculation...");
+      this._result = 42; // Simulating a complex computation
+    }
+    return this._result;
+  }
+}
+
+const calc = new ExpensiveCalculation();
+console.log(calc.result); // "Performing expensive calculation..." -> 42
+console.log(calc.result); // 42 (cached, no recalculation)
+```
+
+#### **d. Chaining with Setters**
+Enable method chaining by returning `this` from setters.
+
+```typescript
+class Config {
+  private _port: number = 3000;
+  private _env: string = "development";
+
+  set port(port: number) {
+    this._port = port;
+    return this;
+  }
+
+  set env(env: string) {
+    this._env = env;
+    return this;
+  }
+
+  get settings(): string {
+    return `Port: ${this._port}, Env: ${this._env}`;
+  }
+}
+
+const config = new Config();
+config.port = 8080;
+config.env = "production";
+
+console.log(config.settings); // "Port: 8080, Env: production"
+```
+
+---
+
+### **5. Best Practices**
+1. **Use Getters for Computed Properties**: Avoid storing derived values directly; compute them when needed.
+2. **Validation in Setters**: Always validate inputs to prevent invalid states.
+3. **Avoid Heavy Logic in Getters**: Keep getters lightweight for better performance.
+4. **Prefix Private Properties**: Use a convention like `_` for private fields (e.g., `_name`).
+
+---
+
+### **6. Real-World Use Cases**
+1. **Data Validation**:
+   - Ensure user inputs are valid before storing them.
+2. **Computed Properties**:
+   - Calculate properties like `totalPrice`, `discount`, or `area` on demand.
+3. **Lazy Loading**:
+   - Load data only when it’s accessed (e.g., fetching data from an API).
+4. **Read-Only Configurations**:
+   - Expose read-only settings like `appVersion` or `environment`.
+
+---
+
+### **7. TypeScript-Specific Features**
+#### **a. Type Safety**
+TypeScript enforces strict types for both getters and setters.
+
+```typescript
+class Account {
+  private _balance: number = 0;
+
+  get balance(): number {
+    return this._balance;
+  }
+
+  set balance(amount: number) {
+    if (amount < 0) {
+      throw new Error("Balance cannot be negative.");
+    }
+    this._balance = amount;
+  }
+}
+
+const account = new Account();
+account.balance = 100; // Valid
+console.log(account.balance); // 100
+
+// account.balance = "invalid"; // Error: Type 'string' is not assignable to type 'number'.
+```
+
+#### **b. Getter/Setter with `readonly`**
+When combined with the `readonly` modifier, getters ensure immutability.
+
+---
+
+### **8. Common Errors and Solutions**
+1. **Circular Getter/Setter Calls**:
+   - Avoid recursive calls within a getter or setter.
+2. **Performance Issues**:
+   - Be cautious with expensive computations in getters.
+3. **Type Mismatches**:
+   - Ensure types in getters and setters are consistent.
+
+---
+
+Let me know if you'd like further clarification or examples!
 
 Yes, that's correct! In TypeScript, you can declare and initialize class properties directly within the constructor using access modifiers like `public`, `private`, or `readonly`. If you don't use an access modifier in the constructor, the parameter will be treated as a regular local variable, and it won't automatically become a class property.
 
@@ -2133,3 +2623,765 @@ const obj: C = { x: 123, y: "hello" };
 ---
 
 These strict checks ensure that TypeScript provides a robust and predictable development experience, reducing bugs and enhancing code quality.
+
+---
+
+### **TypeScript Decorators**
+
+Decorators in TypeScript are special functions that can modify or annotate classes, methods, accessors, properties, or parameters. They are widely used in frameworks like Angular and NestJS to provide metadata and functionality to code components.
+
+---
+
+### **What Are Decorators?**
+
+Decorators are functions that are prefixed with the `@` symbol and are applied to classes or their members. They allow you to extend functionality dynamically at runtime.
+
+---
+
+### **Types of Decorators**
+
+1. **Class Decorators**
+2. **Method Decorators**
+3. **Accessor Decorators**
+4. **Property Decorators**
+5. **Parameter Decorators**
+
+---
+
+### **How to Enable Decorators**
+
+To use decorators in TypeScript, you need to enable the `experimentalDecorators` option in the `tsconfig.json` file.
+
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true
+  }
+}
+```
+
+---
+
+### **1. Class Decorators**
+
+A class decorator is a function that takes a class constructor as an argument and can be used to modify or replace the class.
+
+#### **Example**: Logging Class Name
+```typescript
+function Logger(constructor: Function) {
+  console.log("Class Created:", constructor.name);
+}
+
+@Logger
+class User {
+  constructor(public name: string) {}
+}
+
+const user = new User("John");
+// Output:
+// Class Created: User
+```
+
+---
+
+### **2. Method Decorators**
+
+A method decorator is applied to a method and receives:
+- `target`: The prototype of the class.
+- `propertyKey`: The name of the method.
+- `descriptor`: The property descriptor of the method.
+
+#### **Example**: Logging Method Calls
+```typescript
+function LogMethod(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  const originalMethod = descriptor.value;
+
+  descriptor.value = function (...args: any[]) {
+    console.log(`Method ${propertyKey} called with args:`, args);
+    return originalMethod.apply(this, args);
+  };
+}
+
+class Calculator {
+  @LogMethod
+  add(a: number, b: number): number {
+    return a + b;
+  }
+}
+
+const calc = new Calculator();
+console.log(calc.add(2, 3));
+// Output:
+// Method add called with args: [2, 3]
+// 5
+```
+
+---
+
+### **3. Accessor Decorators**
+
+An accessor decorator is applied to getters and setters. It works similarly to method decorators.
+
+#### **Example**: Validating a Setter
+```typescript
+function ValidateSet(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  const originalSet = descriptor.set;
+
+  descriptor.set = function (value: number) {
+    if (value < 0) {
+      throw new Error("Value must be non-negative");
+    }
+    originalSet!.call(this, value);
+  };
+}
+
+class Account {
+  private _balance: number = 0;
+
+  @ValidateSet
+  set balance(value: number) {
+    this._balance = value;
+  }
+
+  get balance() {
+    return this._balance;
+  }
+}
+
+const account = new Account();
+account.balance = 100; // OK
+// account.balance = -50; // Error: Value must be non-negative
+```
+
+---
+
+### **4. Property Decorators**
+
+A property decorator is applied to class properties. It cannot modify the property's value directly but can add metadata.
+
+#### **Example**: Adding Metadata
+```typescript
+function ReadOnly(target: any, propertyKey: string) {
+  Object.defineProperty(target, propertyKey, {
+    writable: false,
+  });
+}
+
+class Profile {
+  @ReadOnly
+  username: string = "JohnDoe";
+}
+
+const profile = new Profile();
+// profile.username = "JaneDoe"; // Error: Cannot assign to read-only property
+```
+
+---
+
+### **5. Parameter Decorators**
+
+A parameter decorator is applied to a method's parameters and receives:
+- `target`: The prototype of the class.
+- `propertyKey`: The name of the method.
+- `parameterIndex`: The index of the parameter in the method's arguments.
+
+#### **Example**: Logging Parameter Usage
+```typescript
+function LogParameter(target: any, propertyKey: string, parameterIndex: number) {
+  console.log(`Parameter ${parameterIndex} in method ${propertyKey} was decorated.`);
+}
+
+class Greeting {
+  greet(@LogParameter message: string) {
+    console.log(message);
+  }
+}
+
+const greeter = new Greeting();
+greeter.greet("Hello!");
+// Output:
+// Parameter 0 in method greet was decorated.
+```
+
+---
+
+### **Combining Decorators**
+
+You can apply multiple decorators to the same target. They are executed in reverse order for decoration and in order for execution.
+
+#### **Example**
+```typescript
+function First() {
+  console.log("First Decorator");
+  return function (target: any) {
+    console.log("First Executed");
+  };
+}
+
+function Second() {
+  console.log("Second Decorator");
+  return function (target: any) {
+    console.log("Second Executed");
+  };
+}
+
+@First()
+@Second()
+class Example {}
+
+// Output:
+// Second Decorator
+// First Decorator
+// First Executed
+// Second Executed
+```
+
+---
+
+### **Practical Use Cases**
+
+1. **Logging**: Automatically log method calls, parameters, or class creation.
+2. **Validation**: Enforce rules on property values or method parameters.
+3. **Dependency Injection**: Automatically inject dependencies in frameworks like NestJS.
+4. **Metadata**: Attach metadata to classes or methods (e.g., in Angular for components and services).
+
+---
+
+### **Key Points**
+- Decorators are syntactic sugar for higher-order functions.
+- Class, method, property, and parameter decorators have different purposes.
+- They provide a powerful way to implement reusable functionality across classes and methods.
+
+--- 
+
+Let me know if you want further clarification or additional examples!
+
+Custom errors in TypeScript are an essential feature for creating robust and maintainable applications. They allow you to define error types specific to your application's logic, improving error handling and debugging.
+
+Here’s an in-depth look at **Custom Errors in TypeScript**, including advanced patterns:
+
+---
+
+### **1. What are Custom Errors?**
+Custom errors are user-defined classes that extend the built-in `Error` class in JavaScript. They allow you to create error types that represent specific issues in your codebase.
+
+---
+
+### **2. Key Components of a Custom Error**
+- **Name**: Identify the type of error.
+- **Message**: Provide details about the error.
+- **Stack Trace**: (Optional) Automatically available when extending `Error`.
+
+---
+
+### **3. Basic Example**
+```typescript
+class CustomError extends Error {
+  constructor(message: string) {
+    super(message); // Call the parent constructor
+    this.name = "CustomError"; // Set the error name
+    Object.setPrototypeOf(this, new.target.prototype); // Fix prototype chain
+  }
+}
+
+try {
+  throw new CustomError("This is a custom error!");
+} catch (error) {
+  console.error(error.name); // CustomError
+  console.error(error.message); // This is a custom error!
+  console.error(error.stack); // Stack trace
+}
+```
+
+---
+
+### **4. Why Use `Object.setPrototypeOf`?**
+TypeScript transpiles to ES5/ES6 JavaScript, where extending built-in classes like `Error` might break the prototype chain.  
+Using `Object.setPrototypeOf(this, new.target.prototype)` ensures the correct prototype chain is maintained.
+
+---
+
+### **5. Adding Custom Properties**
+You can add extra properties to store additional error-related information.
+
+```typescript
+class ValidationError extends Error {
+  field: string;
+
+  constructor(field: string, message: string) {
+    super(message);
+    this.name = "ValidationError";
+    this.field = field;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+try {
+  throw new ValidationError("email", "Invalid email address.");
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error(`${error.name}: ${error.message}`);
+    console.error(`Field: ${error.field}`);
+  }
+}
+```
+
+---
+
+### **6. Custom Error Hierarchy**
+Create a hierarchy of custom errors to represent different error types.
+
+```typescript
+class AppError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AppError";
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+class DatabaseError extends AppError {
+  constructor(message: string) {
+    super(message);
+    this.name = "DatabaseError";
+  }
+}
+
+class NetworkError extends AppError {
+  constructor(message: string) {
+    super(message);
+    this.name = "NetworkError";
+  }
+}
+
+try {
+  throw new NetworkError("Failed to connect to the server.");
+} catch (error) {
+  if (error instanceof AppError) {
+    console.error(`AppError: ${error.message}`);
+  }
+}
+```
+
+---
+
+### **7. Advanced Patterns**
+#### **a. Custom Error with Metadata**
+Store metadata to provide additional context about the error.
+
+```typescript
+class ApiError extends Error {
+  statusCode: number;
+  details: any;
+
+  constructor(statusCode: number, message: string, details?: any) {
+    super(message);
+    this.name = "ApiError";
+    this.statusCode = statusCode;
+    this.details = details;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+try {
+  throw new ApiError(404, "Resource not found", { resource: "User" });
+} catch (error) {
+  if (error instanceof ApiError) {
+    console.error(`Status Code: ${error.statusCode}`);
+    console.error(`Details:`, error.details);
+  }
+}
+```
+
+#### **b. Wrapping External Errors**
+Wrap external errors to add context without losing the original error stack.
+
+```typescript
+class ExternalError extends Error {
+  originalError: Error;
+
+  constructor(message: string, originalError: Error) {
+    super(message);
+    this.name = "ExternalError";
+    this.originalError = originalError;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+try {
+  try {
+    JSON.parse("invalid-json");
+  } catch (originalError) {
+    throw new ExternalError("Failed to parse JSON", originalError);
+  }
+} catch (error) {
+  if (error instanceof ExternalError) {
+    console.error(error.message); // Failed to parse JSON
+    console.error(error.originalError.message); // Unexpected token i in JSON at position 0
+  }
+}
+```
+
+#### **c. Error Factory**
+Centralize error creation with an error factory.
+
+```typescript
+class ErrorFactory {
+  static createValidationError(field: string, message: string) {
+    return new ValidationError(field, message);
+  }
+
+  static createDatabaseError(message: string) {
+    return new DatabaseError(message);
+  }
+}
+
+const error = ErrorFactory.createValidationError("username", "Username is required.");
+console.error(error);
+```
+
+---
+
+### **8. Custom Errors in Promises/Async Code**
+Handle custom errors in asynchronous code.
+
+```typescript
+async function fetchData() {
+  throw new ApiError(500, "Server error");
+}
+
+async function main() {
+  try {
+    await fetchData();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      console.error(`API Error: ${error.message}`);
+    }
+  }
+}
+
+main();
+```
+
+---
+
+### **9. Best Practices**
+1. **Use a Base Error Class**: Create a base custom error (e.g., `AppError`) for all application-specific errors.
+2. **Maintain the Prototype Chain**: Always set the prototype chain using `Object.setPrototypeOf`.
+3. **Add Contextual Information**: Include additional properties like status codes or metadata.
+4. **Avoid Overusing `any`**: Use specific types to improve type safety.
+5. **Leverage Error Hierarchies**: Group related errors under a common base class.
+6. **Wrap External Errors**: Preserve the stack trace of external errors when adding context.
+
+---
+
+### **10. Real-World Use Cases**
+1. **API Clients**  
+   - Custom errors for HTTP status codes (e.g., `NotFoundError`, `UnauthorizedError`).
+2. **Validation Libraries**  
+   - Specific validation errors (e.g., `FieldRequiredError`, `InvalidFormatError`).
+3. **Database Errors**  
+   - Errors for connection issues or query failures.
+4. **File System Operations**  
+   - Errors for file not found, permission denied, etc.
+5. **UI Applications**  
+   - Provide meaningful messages to users by catching and displaying custom errors.
+
+---
+
+### **Index Signatures in TypeScript**
+
+An **index signature** in TypeScript is a way to define a type for objects that have dynamic keys, where the key names are not predetermined but the type of the values is consistent. It is particularly useful when you need to represent objects with unknown keys but known value types.
+
+---
+
+### **1. Syntax**
+
+```typescript
+interface Example {
+  [key: string]: string; // Key must be a string, and value must be a string
+}
+```
+
+- **`[key: string]`**: Declares that the key is of type `string`.
+- **`string`** (after the colon): Specifies the type of the value associated with the key.
+
+---
+
+### **2. Basic Example**
+
+```typescript
+interface UserProfile {
+  [key: string]: string; // All properties must have string values
+}
+
+const profile: UserProfile = {
+  name: "Alice",
+  email: "alice@example.com",
+  role: "admin",
+};
+
+console.log(profile.name); // "Alice"
+console.log(profile.email); // "alice@example.com"
+```
+
+Here, `UserProfile` allows any number of properties with `string` keys and `string` values.
+
+---
+
+### **3. Restricting Keys with Index Signatures**
+
+To restrict the value type while having a mix of predefined and dynamic properties:
+
+```typescript
+interface UserProfile {
+  name: string; // Predefined property
+  [key: string]: string; // Additional dynamic properties must also have string values
+}
+
+const profile: UserProfile = {
+  name: "Bob",
+  email: "bob@example.com",
+  role: "user",
+};
+
+// const invalidProfile: UserProfile = {
+//   name: "Charlie",
+//   age: 30, // Error: Type 'number' is not assignable to type 'string'.
+// };
+```
+
+In this example:
+- `name` is a predefined property with a specific type.
+- Any other keys (`email`, `role`, etc.) must adhere to the index signature’s value type.
+
+---
+
+### **4. Using Index Signatures with Specific Key Types**
+
+You can use types like `string` or `number` for the key.
+
+#### **a. String Keys**
+```typescript
+interface Dictionary {
+  [key: string]: number;
+}
+
+const scores: Dictionary = {
+  math: 95,
+  science: 90,
+  history: 85,
+};
+```
+
+#### **b. Number Keys**
+```typescript
+interface NumberIndex {
+  [index: number]: string; // Keys must be numbers
+}
+
+const arrayLike: NumberIndex = {
+  0: "Alice",
+  1: "Bob",
+  2: "Charlie",
+};
+
+console.log(arrayLike[1]); // "Bob"
+```
+
+- When the key is a number, it aligns with JavaScript array-like behavior.
+
+---
+
+### **5. Index Signature with Other Properties**
+
+When combining index signatures with specific properties, ensure all properties conform to the signature if applicable.
+
+```typescript
+interface Mixed {
+  id: number; // Fixed property
+  [key: string]: string | number; // Additional properties
+}
+
+const example: Mixed = {
+  id: 101,
+  name: "Item",
+  description: "This is an example",
+};
+
+console.log(example.id); // 101
+console.log(example.name); // "Item"
+```
+
+---
+
+### **6. Limiting Index Signature Values**
+
+Index signatures can restrict the value types, but additional fixed properties must conform to this restriction.
+
+```typescript
+interface Restricted {
+  [key: string]: boolean;
+  isActive: boolean; // Allowed because it's a boolean
+}
+
+// const invalid: Restricted = {
+//   isActive: true,
+//   description: "not allowed", // Error: Type 'string' is not assignable to type 'boolean'.
+// };
+```
+
+---
+
+### **7. Read-Only Index Signatures**
+
+You can use the `readonly` modifier to ensure properties cannot be reassigned.
+
+```typescript
+interface ReadOnlyExample {
+  readonly [key: string]: string;
+}
+
+const obj: ReadOnlyExample = {
+  name: "Alice",
+  role: "Admin",
+};
+
+// obj.role = "User"; // Error: Cannot assign to 'role' because it is a read-only property.
+```
+
+---
+
+### **8. Real-World Use Cases**
+
+#### **a. Dynamic Dictionaries**
+A configuration object where keys and values are not predefined:
+
+```typescript
+interface Config {
+  [key: string]: string | number | boolean;
+}
+
+const appConfig: Config = {
+  theme: "dark",
+  version: 1.2,
+  isBeta: true,
+};
+```
+
+#### **b. API Responses**
+When working with APIs that return objects with dynamic keys:
+
+```typescript
+interface ApiResponse {
+  [key: string]: any; // Dynamically typed response
+}
+
+const response: ApiResponse = {
+  status: 200,
+  message: "OK",
+  data: { id: 1, name: "Alice" },
+};
+```
+
+#### **c. Error Messages**
+Storing error messages dynamically for different fields in a form:
+
+```typescript
+interface ErrorMessages {
+  [field: string]: string; // Field names as keys, error messages as values
+}
+
+const errors: ErrorMessages = {
+  email: "Invalid email address",
+  password: "Password must be at least 8 characters",
+};
+
+console.log(errors.email); // "Invalid email address"
+```
+
+---
+
+### **9. Key Points to Remember**
+1. **Keys are Either Strings or Numbers**:
+   - Use `string` for most cases and `number` for array-like objects.
+2. **Combining Fixed and Dynamic Properties**:
+   - Combine predefined properties with index signatures for flexibility.
+3. **Type Restrictions**:
+   - Index signatures enforce a consistent value type.
+4. **Read-Only Indexes**:
+   - Use `readonly` for immutable dynamic properties.
+
+---
+
+### **10. Common Mistakes**
+
+1. **Mismatched Value Types**:
+   - Ensure all dynamic properties conform to the index signature’s value type.
+   ```typescript
+   interface Example {
+     [key: string]: number;
+   }
+
+   const invalid: Example = {
+     age: 25,
+     name: "Alice", // Error: Type 'string' is not assignable to type 'number'.
+   };
+   ```
+
+2. **Overlapping Property Types**:
+   - Fixed properties must match the index signature when defined.
+
+---
+
+
+
+// when defining index signature and has an optional property , 
+// it is necessary to define undefined type
+
+// interface Student {
+//     [key: string]: string | number | number[]
+//     name: string,
+//     GPA: number,
+//     classes?: number[] //error
+// }
+
+
+// sol
+interface Student {
+    [key: string]: string | number | number[] | undefined
+    name: string,
+    GPA: number,
+    classes?: number[] //error
+} 
+
+const student: Student = {
+    name: "Doug",
+    GPA: 3.5,
+    classes: [100, 200]
+}
+console.log(student.test);
+
+// KeyOf
+
+refer - https://www.youtube.com/watch?v=gieEQFIfgYc at 2.50.00
+interface Student {
+    [key: string]: string | number | number[] | undefined
+    name: string,
+    GPA: number,
+    classes?: number[] //error
+} 
+
+const student: Student = {
+    name: "Doug",
+    GPA: 3.5,
+    classes: [100, 200]
+}
+console.log(student.test)
+
+
+
+//key of
+
+// when accessing an unknown field like student.test and index has not been defined. It throws an error.
+// Sol for this is to use Key Of
